@@ -1,0 +1,22 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Bytecode & compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ──────────────── Flask-Specific ────────────────
+# Instance config (Flask runtime secrets, etc.)
+instance/
+
+# Local environment variables
+.env
+
+# ──────────────── Docker-Specific ────────────────
+# Volume for PostgreSQL data (named volume)
+pgdata/
