@@ -20,3 +20,11 @@ instance/
 # ──────────────── Docker-Specific ────────────────
 # Volume for PostgreSQL data (named volume)
 pgdata/
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/
