@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}My Goals{% endblock %}</h1>
+{% if g.user %}
+<a class="action" href="{{ url_for('goals.create') }}">New Goal</a>
+{% endif %} {% endblock %} {% block content %} {% if g.user %} {% if goals %} {%
+for goal in goals %}
+<article class="goal">
+  <header>
+    <div>
+      <h1>
+        {% if goal.is_completed %}
+        <s>{{ goal.title }}</s>
+        {% else %} {{ goal.title }} {% endif %}
+      </h1>
+      <div class="about">
+        Created on {{ goal.created_at.strftime('%Y-%m-%d') }} {% if
+        goal.due_date %} | Due {{ goal.due_date }}{% endif %}
+      </div>
+    </div>
+    <div class="actions">
+      <form
+        action="{{ url_for('goals.toggle_complete', id=goal.id) }}"
+        method="post"
+      >
+        <button type="submit" class="toggle-btn">
+          {{ 'Mark Incomplete' if goal.is_completed else 'Mark Complete' }}
+        </button>
+      </form>
+      <a class="action" href="{{ url_for('goals.update', id=goal.id) }}"
+        >Edit</a
+      >
+      <form action="{{ url_for('goals.delete', id=goal.id) }}" method="post">
+        <button
+          class="danger"
+          type="submit"
+          onclick="return confirm('Are you sure?');"
+        >
+          Delete
+        </button>
+      </form>
+    </div>
+  </header>
+  {% if goal.description %}
+  <p class="description">{{ goal.description }}</p>
+  {% endif %}
+</article>
+{% if not loop.last %}
+<hr />
+{% endif %} {% endfor %} {% else %}
+<p class="no-goals">
+  You don't have any goals yet.
+  <a href="{{ url_for('goals.create') }}">Create one!</a>
+</p>
+{% endif %} {% else %}
+<div class="welcome">
+  <h2>Welcome to Goal Tracker</h2>
+  <p>Track and manage your personal goals effectively.</p>
+  <div class="auth-links">
+    <a href="{{ url_for('auth.login') }}" class="btn">Log In</a>
+    <a href="{{ url_for('auth.register') }}" class="btn">Register</a>
+  </div>
+</div>
+{% endif %} {% endblock %}

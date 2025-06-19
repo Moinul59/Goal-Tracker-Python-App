@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}New Goal{% endblock %}</h1>
+{% endblock %} {% block content %}
+<form method="post">
+  <label for="title">Title</label>
+  <input name="title" id="title" value="{{ request.form['title'] }}" required />
+  <label for="description">Description</label>
+  <textarea name="description" id="description">
+{{ request.form['description'] }}</textarea
+  >
+  <label for="due_date">Due Date (optional)</label>
+  <input
+    type="date"
+    name="due_date"
+    id="due_date"
+    value="{{ request.form['due_date'] }}"
+  />
+  <input type="submit" value="Save" />
+</form>
+{% endblock %}

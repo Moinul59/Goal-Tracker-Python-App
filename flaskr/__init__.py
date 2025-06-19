@@ -8,7 +8,8 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='your_secret_key',
         # DATABASE=os.getenv('DATABASE_URL') or die("DB URL is Missing"),
-        DATABASE=os.getenv('DATABASE_URL', 'postgresql://flaskuser:flaskpass@localhost:5432/flaskr')
+        DATABASE=os.getenv(
+            'DATABASE_URL', 'postgresql://flaskuser:flaskpass@localhost:5432/flaskr')
     )
 
     if test_config is None:
@@ -25,14 +26,18 @@ def create_app(test_config=None):
         pass
 
     # a simple page that says hello
-    @app.route('/')
-    def hello():
-        return 'Hello, World!'
-    
+    # @app.route('/')
+    # def hello():
+    #     return 'Hello, World!'
+
     from . import db
     db.init_app(app)
 
     from . import auth
-    app.register_blueprint(auth.auth)
+    app.register_blueprint(auth.bp)
+
+    from . import goals
+    app.register_blueprint(goals.bp)
+    app.add_url_rule('/', endpoint='index')
 
     return app
