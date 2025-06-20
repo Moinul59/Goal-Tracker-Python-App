@@ -1,9 +1,9 @@
 import functools
-import psycopg
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import login_user, logout_user, login_required
 
-from flaskr.db import get_db
+from flaskr.models import db, User
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -11,10 +11,11 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
+        print("🔐 Reigister button clicked")
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        db = get_db()
+
         error = None
 
         if not username:
@@ -25,16 +26,17 @@ def register():
             error = 'Password is required'
 
         if error is None:
-            try:
-                with db.cursor() as cur:
-                    cur.execute(
-                        "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
-                        [username, email, generate_password_hash(password)]
-                    )
-                db.commit()
-            except psycopg.IntegrityError:
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
                 error = f"User with email {email} is already registered"
             else:
+                new_user = User(
+                    username=username,
+                    email=email,
+                    password_hash=generate_password_hash(password)
+                )
+                db.session.add(new_user)
+                db.session.commit()
                 return redirect(url_for('auth.login'))
 
         flash(error)
@@ -45,14 +47,14 @@ def register():
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
+        print("🔐 Login button clicked")  # Debug log for your reference
+
         email = request.form['email']
         password = request.form['password']
-        db = get_db()
+
         error = None
 
-        with db.cursor() as cur:
-            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-            user = cur.fetchone()
+        user = User.query.filter_by(email=email).first()
 
         if user is None:
             error = "Incorrect email"
@@ -60,8 +62,7 @@ def login():
             error = "Incorrect password"
 
         if error is None:
-            session.clear()
-            session['user_id'] = user['id']
+            login_user(user)
             return redirect(url_for('index'))
 
         flash(error)
@@ -69,32 +70,7 @@ def login():
     return render_template('auth/login.html')
 
 
-@bp.before_app_request
-def load_logged_in_user():
-    user_id = session.get('user_id')
-
-    if user_id is None:
-        g.user = None
-    else:
-        db = get_db()
-        with db.cursor() as cur:
-            cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-            g.user = cur.fetchone()
-
-
 @bp.route('/logout')
 def logout():
-    session.clear()
+    logout_user()
     return redirect(url_for('index'))
-
-
-# Creating, editing, and deleting blog posts will require a user to be logged in. A decorator can be used to check this for each view it’s applied to.
-def login_required(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for('auth.login'))
-
-        return view(**kwargs)
-
-    return wrapped_view
