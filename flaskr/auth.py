@@ -11,7 +11,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
-        print("🔐 Reigister button clicked")
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
@@ -47,8 +46,6 @@ def register():
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
-        print("🔐 Login button clicked")  # Debug log for your reference
-
         email = request.form['email']
         password = request.form['password']
 
@@ -63,8 +60,6 @@ def login():
 
         if error is None:
             login_user(user)
-            print(
-                f"✅ Logged in user: {user.username}, Authenticated: {user.is_authenticated}")
             return redirect(url_for('index'))
 
         flash(error)

@@ -10,8 +10,6 @@ bp = Blueprint('goals', __name__)
 
 @bp.route('/')
 def index():
-    print(
-        f"🧠 Current user: {current_user}, Authenticated: {current_user.is_authenticated}")
     goals = []
 
     if current_user.is_authenticated:
