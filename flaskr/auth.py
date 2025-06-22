@@ -58,11 +58,13 @@ def login():
 
         if user is None:
             error = "Incorrect email"
-        elif not check_password_hash(user['password_hash'], password):
+        elif not check_password_hash(user.password_hash, password):
             error = "Incorrect password"
 
         if error is None:
             login_user(user)
+            print(
+                f"✅ Logged in user: {user.username}, Authenticated: {user.is_authenticated}")
             return redirect(url_for('index'))
 
         flash(error)
