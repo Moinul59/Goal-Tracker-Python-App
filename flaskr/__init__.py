@@ -2,8 +2,10 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
+migrate = Migrate()
 login_manager = LoginManager()
 
 
@@ -49,9 +51,6 @@ def create_app(test_config=None):
     app.register_blueprint(goals.bp)
     app.add_url_rule('/', endpoint='index')
 
-    from . import models
-
-    with app.app_context():
-        db.create_all()
+    migrate.init_app(app, db)
 
     return app
