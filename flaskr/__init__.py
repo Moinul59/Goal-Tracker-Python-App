@@ -64,8 +64,8 @@ def create_app(test_config=None):
     app.register_blueprint(goals.bp)
     app.add_url_rule('/', endpoint='index')
 
-    from . import test_routes
-    app.register_blueprint(test_routes.bp)
+    from .test_routes import bp as test_bp
+    app.register_blueprint(test_bp)
 
     migrate.init_app(app, db)
 
