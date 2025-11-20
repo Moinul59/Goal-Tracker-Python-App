@@ -3,6 +3,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+load_dotenv()
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -19,6 +21,17 @@ def create_app(test_config=None):
             'postgresql://flaskuser:flaskpass@localhost:5432/flaskr'
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
+    )
+
+    app.config.from_mapping(
+        SMTP_SERVER=os.environ.get("SMTP_SERVER"),
+        SMTP_PORT=int(os.environ.get("SMTP_PORT", 465)),
+        SMTP_USERNAME=os.environ.get("SMTP_USERNAME"),
+        SMTP_PASSWORD=os.environ.get("SMTP_PASSWORD"),
+
+        TWILIO_ACCOUNT_SID=os.environ.get("TWILIO_ACCOUNT_SID"),
+        TWILIO_AUTH_TOKEN=os.environ.get("TWILIO_AUTH_TOKEN"),
+        TWILIO_PHONE_NUMBER=os.environ.get("TWILIO_PHONE_NUMBER"),
     )
 
     if test_config is None:
@@ -50,6 +63,9 @@ def create_app(test_config=None):
     from . import goals
     app.register_blueprint(goals.bp)
     app.add_url_rule('/', endpoint='index')
+
+    from . import test_routes
+    app.register_blueprint(test_routes.bp)
 
     migrate.init_app(app, db)
 
