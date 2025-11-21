@@ -1,30 +1,19 @@
-import functools
-import psycopg
-from flask import Blueprint, flash, g, render_template, request, redirect, url_for, session
+from flask import Blueprint, flash, render_template, request, redirect, url_for
 from werkzeug.exceptions import abort
+from flask_login import login_required, current_user
 
-from flaskr.auth import login_required
-from flaskr.db import get_db
+from flaskr.models import db, Goal
 
 bp = Blueprint('goals', __name__)
 
 
 @bp.route('/')
 def index():
-    db = get_db()
-    goals = None
+    goals = []
 
-    if g.user:
-        with db.cursor() as cur:
-            cur.execute(
-                "SELECT gl.id, title, description, is_completed, due_date, gl.created_at, username "
-                "FROM goals gl JOIN users u ON gl.user_id = u.id "
-                "WHERE gl.user_id = %s "
-                "ORDER BY created_at DESC",
-                (g.user['id'],)
-            )
-            goals = cur.fetchall()
-        return render_template('goals/index.html', goals=goals)
+    if current_user.is_authenticated:
+        goals = Goal.query.filter_by(user_id=current_user.id).order_by(
+            Goal.created_at.desc()).all()
 
     return render_template('goals/index.html', goals=goals)
 
@@ -44,37 +33,24 @@ def create():
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            with db.cursor() as cur:
-                cur.execute(
-                    "INSERT INTO goals (user_id, title, description, due_date) "
-                    "VALUES (%s, %s, %s, %s)",
-                    [g.user['id'], title, description, due_date]
-                )
-            db.commit()
+            goal = Goal(
+                title=title,
+                description=description,
+                due_date=due_date,
+                user_id=current_user.id
+            )
+            db.session.add(goal)
+            db.session.commit()
             return redirect(url_for('goals.index'))
 
     return render_template('goals/create.html')
 
 
 def get_goal(id, check_author=True):
-    db = get_db()
-    with db.cursor() as cur:
-        cur.execute(
-            "SELECT gl.id, title, description, is_completed, due_date, gl.created_at, user_id, username "
-            "FROM goals gl JOIN users u ON gl.user_id = u.id "
-            "WHERE gl.id = %s",
-            (id,)
-        )
-        goal = cur.fetchone()
+    goal = Goal.query.get_or_404(id)
 
-    if goal is None:
-        abort(404, f"Goal id {id} doesn't exist.")
-
-    if check_author:
-        # Ensure g.user is not None
-        if g.user is None or goal['user_id'] != g.user['id']:
-            abort(403)
+    if check_author and goal.user_id != current_user.id:
+        abort(403)
 
     return goal
 
@@ -98,15 +74,12 @@ def update(id):
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            with db.cursor() as cur:
-                cur.execute(
-                    "UPDATE goals SET title = %s, description = %s, due_date = %s,"
-                    " is_completed = %s, updated_at = CURRENT_TIMESTAMP"
-                    " WHERE id = %s",
-                    [title, description, due_date, is_completed, id]
-                )
-            db.commit()
+            goal.title = title
+            goal.description = description
+            goal.due_date = due_date
+            goal.is_completed = is_completed
+            db.session.commit()
+
             return redirect(url_for('goals.index'))
 
     return render_template('goals/update.html', goal=goal)
@@ -115,11 +88,10 @@ def update(id):
 @bp.route('/<int:id>/delete', methods=('POST',))
 @login_required
 def delete(id):
-    get_goal(id)
-    db = get_db()
-    with db.cursor() as cur:
-        cur.execute("DELETE FROM goals WHERE id = %s", (id,))
-    db.commit()
+    goal = get_goal(id)
+
+    db.session.delete(goal)
+    db.session.commit()
     return redirect(url_for('goals.index'))
 
 
@@ -127,12 +99,7 @@ def delete(id):
 @login_required
 def toggle_complete(id):
     goal = get_goal(id)
-    db = get_db()
-    with db.cursor() as cur:
-        cur.execute(
-            "UPDATE goals SET is_completed = NOT is_completed,"
-            " updated_at = CURRENT_TIMESTAMP WHERE id = %s",
-            (id,)
-        )
-    db.commit()
+    goal.is_completed = not goal.is_completed
+    db.session.commit()
+
     return redirect(url_for('goals.index'))

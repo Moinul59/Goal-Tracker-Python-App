@@ -1,15 +1,37 @@
 import os
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_migrate import Migrate
+from dotenv import load_dotenv
+load_dotenv()
+
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
 
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='your_secret_key',
-        # DATABASE=os.getenv('DATABASE_URL') or die("DB URL is Missing"),
-        DATABASE=os.getenv(
-            'DATABASE_URL', 'postgresql://flaskuser:flaskpass@localhost:5432/flaskr')
+        SECRET_KEY='secret_key',
+        SQLALCHEMY_DATABASE_URI=os.getenv(
+            'DATABASE_URL',
+            'postgresql://flaskuser:flaskpass@localhost:5432/flaskr'
+        ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False
+    )
+
+    app.config.from_mapping(
+        SMTP_SERVER=os.environ.get("SMTP_SERVER"),
+        SMTP_PORT=int(os.environ.get("SMTP_PORT", 465)),
+        SMTP_USERNAME=os.environ.get("SMTP_USERNAME"),
+        SMTP_PASSWORD=os.environ.get("SMTP_PASSWORD"),
+
+        TWILIO_ACCOUNT_SID=os.environ.get("TWILIO_ACCOUNT_SID"),
+        TWILIO_AUTH_TOKEN=os.environ.get("TWILIO_AUTH_TOKEN"),
+        TWILIO_PHONE_NUMBER=os.environ.get("TWILIO_PHONE_NUMBER"),
     )
 
     if test_config is None:
@@ -25,13 +47,15 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # a simple page that says hello
-    # @app.route('/')
-    # def hello():
-    #     return 'Hello, World!'
-
-    from . import db
     db.init_app(app)
+
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import User
+        return User.query.get(int(user_id))
 
     from . import auth
     app.register_blueprint(auth.bp)
@@ -39,5 +63,10 @@ def create_app(test_config=None):
     from . import goals
     app.register_blueprint(goals.bp)
     app.add_url_rule('/', endpoint='index')
+
+    from .test_routes import bp as test_bp
+    app.register_blueprint(test_bp)
+
+    migrate.init_app(app, db)
 
     return app

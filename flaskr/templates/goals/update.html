@@ -6,28 +6,35 @@
   <input
     name="title"
     id="title"
-    value="{{ request.form['title'] or goal.title }}"
+    value="{{ request.form.get('title', goal.title) }}"
     required
   />
+
   <label for="description">Description</label>
   <textarea name="description" id="description">
-{{ request.form['description'] or goal.description }}</textarea
+{{ request.form.get('description', goal.description) }}</textarea
   >
+
   <label for="due_date">Due Date</label>
   <input
     type="date"
     name="due_date"
     id="due_date"
-    value="{{ request.form['due_date'] or goal.due_date }}"
+    value="{{ request.form.get('due_date', goal.due_date) }}"
   />
+
   <div class="checkbox">
-    <input type="checkbox" name="is_completed" id="is_completed" {{ 'checked' if
-    goal.is_completed or request.form.get('is_completed') }}>
+    <input type="checkbox" name="is_completed" id="is_completed" {% if
+    request.form.get('is_completed') or goal.is_completed %}checked{% endif %}
+    />
     <label for="is_completed">Completed</label>
   </div>
+
   <input type="submit" value="Save" />
 </form>
+
 <hr />
+
 <form action="{{ url_for('goals.delete', id=goal.id) }}" method="post">
   <input
     class="danger"
