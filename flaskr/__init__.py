@@ -15,7 +15,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='your_secret_key',
+        SECRET_KEY='secret_key',
         SQLALCHEMY_DATABASE_URI=os.getenv(
             'DATABASE_URL',
             'postgresql://flaskuser:flaskpass@localhost:5432/flaskr'

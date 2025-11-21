@@ -1,5 +1,4 @@
-import functools
-from flask import Blueprint, flash, g, render_template, request, redirect, url_for, session
+from flask import Blueprint, flash, render_template, request, redirect, url_for
 from werkzeug.exceptions import abort
 from flask_login import login_required, current_user
 
