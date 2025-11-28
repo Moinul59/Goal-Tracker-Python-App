@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from flask import request
 load_dotenv()
 
 db = SQLAlchemy()
@@ -14,11 +15,17 @@ login_manager = LoginManager()
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+
+    INSTANCE = os.getenv("INSTANCE_NAME", "unknown")
+    @app.before_request
+    def before_request():
+        print(f'[{INSTANCE}] {request.method} {request.path}')
+
     app.config.from_mapping(
         SECRET_KEY='secret_key',
         SQLALCHEMY_DATABASE_URI=os.getenv(
             'DATABASE_URL',
-            'postgresql://flaskuser:flaskpass@localhost:5432/flaskr'
+            'postgresql://flaskuser:flaskpass@db:5432/flaskr'
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
