@@ -17,6 +17,7 @@ instance/
 # Local environment variables
 .env
 .idea/
+.vscode/
 
 # ──────────────── Docker-Specific ────────────────
 # Volume for PostgreSQL data (named volume)
