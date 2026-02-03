@@ -9,12 +9,16 @@ RUN apt-get update && apt install -y \
 
 WORKDIR /app
 
+RUN useradd -ms /bin/bash appuser
+
 # Install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project code
 COPY . .
+
+RUN chown -R appuser:appuser /app
 
 # Environment defaults (override via docker-compose or .env)
 ENV FLASK_APP=app.py \
@@ -25,6 +29,8 @@ EXPOSE 8000
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
 
