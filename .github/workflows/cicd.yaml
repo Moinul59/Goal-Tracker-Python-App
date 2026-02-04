@@ -39,6 +39,7 @@ jobs:
       run: python -m pytest
 
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
