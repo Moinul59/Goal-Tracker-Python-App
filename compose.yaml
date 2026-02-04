@@ -1,8 +1,12 @@
+# Docker Compose file using a pre-built image hosted on Docker Hub
+
 services:
   web:
-    image: goal-tracker-app:1.0
+    image: moinul46/goal-tracker-app:1.0
     container_name: goal-tracker-app
     restart: always
+    env_file:
+      - .env
     environment:
       - INSTANCE_NAME=app
       - FLASK_ENV=dev
@@ -20,7 +24,7 @@ services:
       - ./flaskr/templates:/app/flaskr/templates
 
   worker:
-    image: goal-tracker-app:1.0
+    image: moinul46/goal-tracker-app:1.0
     restart: always
     env_file:
       - .env
@@ -37,7 +41,7 @@ services:
 
   db:
     image: postgres:16
-    container_name: postgresql_server
+    container_name: postgresql
     restart: always
     env_file:
       - .env
@@ -50,7 +54,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis_server
+    container_name: redis
     restart: always
     ports:
       - "6379:6379"

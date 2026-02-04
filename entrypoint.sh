@@ -1,20 +1,19 @@
 #!/bin/bash
 set -e
 
-echo "Waiting for postgres..."
-while ! nc -z db 5432; do
-    sleep 1
-done
+echo "Container starting..."
 
-echo "Postgres is up"
+# Wait for Postgres ONLY if app server is starting
+if [ "$1" = "gunicorn" ] || [ "$1" = "flask" ]; then
+    if [ -n "$DATABASE_HOST" ]; then
+        echo "Waiting for Postgres at ${DATABASE_HOST}:${DATABASE_PORT:-5432}..."
 
-# ✅ Run migrations only once
-if [ ! -f "/app/.migrated" ]; then
-    echo "Running migrations for the first time..."
-    flask db upgrade
-    touch /app/.migrated
-else
-    echo "Migrations already applied, skipping..."
+        until nc -z "$DATABASE_HOST" "${DATABASE_PORT:-5432}"; do
+            sleep 1
+        done
+
+        echo "Postgres is reachable"
+    fi
 fi
 
 echo "Starting application..."
