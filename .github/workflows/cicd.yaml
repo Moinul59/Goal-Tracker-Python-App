@@ -77,7 +77,7 @@ jobs:
     steps:
     - name: Deploy to VM via SSH
       if: github.event_name != 'pull_request'
-      uses: appleboy@ssh-action@v1
+      uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.VM_HOST }}
         username: ${{ secrets.VM_USER }}
