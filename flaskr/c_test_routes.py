@@ -12,8 +12,8 @@ def test_email():
     return jsonify({"message": "Email test task queued!"})
 
 
-@bp.route('/sms')
-def test_sms():
-    from flaskr.tasks import send_test_sms_task
-    send_test_sms_task.delay()
-    return jsonify({"message": "SMS test task queued!"})
+# @bp.route('/sms')
+# def test_sms():
+#     from flaskr.tasks import send_test_sms_task
+#     send_test_sms_task.delay()
+#     return jsonify({"message": "SMS test task queued!"})

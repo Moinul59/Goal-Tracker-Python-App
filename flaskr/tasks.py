@@ -64,19 +64,19 @@ def send_deadline_reminders():
                 )
 
         # --- SMS ---
-        if hasattr(user, "phone") and user.phone:
-            try:
-                send_sms(
-                    to_number=user.phone,
-                    message=f"Reminder: Your goal '{goal.title}' is due soon!"
-                )
-                current_app.logger.info(
-                    f"SMS reminder sent → {user.phone}"
-                )
-            except Exception as e:
-                current_app.logger.error(
-                    f"SMS failed for {user.phone}: {e}"
-                )
+        # if hasattr(user, "phone") and user.phone:
+        #     try:
+        #         send_sms(
+        #             to_number=user.phone,
+        #             message=f"Reminder: Your goal '{goal.title}' is due soon!"
+        #         )
+        #         current_app.logger.info(
+        #             f"SMS reminder sent → {user.phone}"
+        #         )
+        #     except Exception as e:
+        #         current_app.logger.error(
+        #             f"SMS failed for {user.phone}: {e}"
+        #         )
 
         reminders_sent += 1
 
@@ -92,9 +92,9 @@ def send_test_email_task():
     return "Test email sent"
 
 
-@celery.task
-def send_test_sms_task():
-    from flaskr.notifications.sms_sender import send_sms
-    send_sms("+918777314531", "This is a Celery SMS test!")
-    return "Test SMS sent"
+# @celery.task
+# def send_test_sms_task():
+#     from flaskr.notifications.sms_sender import send_sms
+#     send_sms("+918777314531", "This is a Celery SMS test!")
+#     return "Test SMS sent"
 

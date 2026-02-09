@@ -36,9 +36,9 @@ def create_app(test_config=None):
         SMTP_USERNAME=os.environ.get("SMTP_USERNAME"),
         SMTP_PASSWORD=os.environ.get("SMTP_PASSWORD"),
 
-        TWILIO_ACCOUNT_SID=os.environ.get("TWILIO_ACCOUNT_SID"),
-        TWILIO_AUTH_TOKEN=os.environ.get("TWILIO_AUTH_TOKEN"),
-        TWILIO_PHONE_NUMBER=os.environ.get("TWILIO_PHONE_NUMBER"),
+        # TWILIO_ACCOUNT_SID=os.environ.get("TWILIO_ACCOUNT_SID"),
+        # TWILIO_AUTH_TOKEN=os.environ.get("TWILIO_AUTH_TOKEN"),
+        # TWILIO_PHONE_NUMBER=os.environ.get("TWILIO_PHONE_NUMBER"),
     )
 
     if test_config is None:

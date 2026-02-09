@@ -17,7 +17,7 @@ jobs:
         python-version: '3.12'
         cache: 'pip'
 
-    # - name: cache pip
+    # - name: cache pip*
     #   uses: actions/cache@v5
     #   with:
     #     path: ~/.cache/pip
@@ -70,3 +70,25 @@ jobs:
         context: .
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to VM via SSH
+      if: github.event_name != 'pull_request'
+      uses: appleboy@ssh-action@v1
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        script: |
+          set -e
+
+          cd ~/app
+
+          export APP_IMAGE_TAG=${{ steps.meta.outputs.version }}
+
+          docker compose pull web worker nginx
+          docker compose run --rm web flask db upgrade
+          docker compose up -d --no-deps web worker nginx
