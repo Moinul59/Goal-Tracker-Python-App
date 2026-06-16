@@ -13,7 +13,7 @@ current_user.is_authenticated %} {% if goals %} {% for goal in goals %}
         {% else %} {{ goal.title }} {% endif %}
       </h1>
       <div class="about">
-        Created on {{ goal.created_at.strftime('%Y-%m-%d') }} {% if
+        Created on {{ goal.created_at.strftime('%Y-%m-%d') if goal.created_at else '' }} {% if
         goal.due_date %} | Due {{ goal.due_date }}{% endif %}
       </div>
     </div>
