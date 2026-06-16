@@ -74,9 +74,11 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+
+    if: github.event_name != 'pull_request'
+
     steps:
     - name: Deploy to VM via SSH
-      if: github.event_name != 'pull_request'
       uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.VM_HOST }}
@@ -84,11 +86,8 @@ jobs:
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
           set -e
+            cd ~/app
 
-          cd ~/app
+            docker compose pull web worker
 
-          export APP_IMAGE_TAG=${{ steps.meta.outputs.version }}
-
-          docker compose pull web worker nginx
-          docker compose run --rm web flask db upgrade
-          docker compose up -d --no-deps web worker nginx
+            docker compose up -d web worker nginx
