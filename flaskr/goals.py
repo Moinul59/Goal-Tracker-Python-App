@@ -2,7 +2,7 @@ from flask import Blueprint, flash, render_template, request, redirect, url_for
 from werkzeug.exceptions import abort
 from flask_login import login_required, current_user
 
-from flaskr.models import db, Goal
+from flaskr.db import query_one, query_all, execute
 
 bp = Blueprint('goals', __name__)
 
@@ -12,8 +12,15 @@ def index():
     goals = []
 
     if current_user.is_authenticated:
-        goals = Goal.query.filter_by(user_id=current_user.id).order_by(
-            Goal.created_at.desc()).all()
+        goals = query_all(
+            """
+            SELECT *
+            FROM goals
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            """,
+            (current_user.id,)
+        )
 
     return render_template('goals/index.html', goals=goals)
 
@@ -33,23 +40,43 @@ def create():
         if error is not None:
             flash(error)
         else:
-            goal = Goal(
-                title=title,
-                description=description,
-                due_date=due_date,
-                user_id=current_user.id
+            execute(
+                """
+                INSERT INTO goals
+                (
+                    user_id,
+                    title,
+                    description,
+                    due_date
+                )
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    current_user.id,
+                    title,
+                    description,
+                    due_date
+                )
             )
-            db.session.add(goal)
-            db.session.commit()
             return redirect(url_for('goals.index'))
 
     return render_template('goals/create.html')
 
 
 def get_goal(id, check_author=True):
-    goal = Goal.query.get_or_404(id)
+    goal = query_one(
+        """
+        SELECT *
+        FROM goals
+        WHERE id = %s
+        """,
+        (id,)
+    )
 
-    if check_author and goal.user_id != current_user.id:
+    if not goal:
+        abort(404)
+
+    if check_author and goal["user_id"] != current_user.id:
         abort(403)
 
     return goal
@@ -74,11 +101,25 @@ def update(id):
         if error is not None:
             flash(error)
         else:
-            goal.title = title
-            goal.description = description
-            goal.due_date = due_date
-            goal.is_completed = is_completed
-            db.session.commit()
+            execute(
+                """
+                UPDATE goals
+                SET
+                    title = %s,
+                    description = %s,
+                    due_date = %s,
+                    is_completed = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                """,
+                (
+                    title,
+                    description,
+                    due_date,
+                    is_completed,
+                    id
+                )
+            )
 
             return redirect(url_for('goals.index'))
 
@@ -90,8 +131,13 @@ def update(id):
 def delete(id):
     goal = get_goal(id)
 
-    db.session.delete(goal)
-    db.session.commit()
+    execute(
+        """
+        DELETE FROM goals
+        WHERE id = %s
+        """,
+        (id,)
+    )
     return redirect(url_for('goals.index'))
 
 
@@ -99,7 +145,14 @@ def delete(id):
 @login_required
 def toggle_complete(id):
     goal = get_goal(id)
-    goal.is_completed = not goal.is_completed
-    db.session.commit()
+    execute(
+        """
+        UPDATE goals
+        SET is_completed = NOT is_completed,
+            updated_at = NOW()
+        WHERE id = %s
+        """,
+        (id,)
+    )
 
     return redirect(url_for('goals.index'))

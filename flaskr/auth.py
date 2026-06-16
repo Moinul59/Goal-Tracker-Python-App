@@ -1,10 +1,22 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_login import login_user, logout_user, login_required
+from flask_login import (
+    UserMixin,
+    login_user,
+    logout_user,
+)
 
-from flaskr.models import db, User
+from .db import query_one, execute
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+class User(UserMixin):
+    def __init__(self, data):
+        self.id = data["id"]
+        self.username = data["username"]
+        self.email = data["email"]
+        self.password_hash = data["password_hash"]
 
 
 @bp.route('/register', methods=('GET', 'POST'))
@@ -24,17 +36,35 @@ def register():
             error = 'Password is required'
 
         if error is None:
-            existing_user = User.query.filter_by(email=email).first()
+            existing_user = query_one(
+                """
+                SELECT *
+                FROM users
+                WHERE email = %s
+                """,
+                (email,)
+            )
+
             if existing_user:
                 error = f"User with email {email} is already registered"
             else:
-                new_user = User(
-                    username=username,
-                    email=email,
-                    password_hash=generate_password_hash(password)
+                execute(
+                    """
+                    INSERT INTO users
+                    (
+                        username,
+                        email,
+                        password_hash
+                    )
+                    VALUES (%s, %s, %s)
+                    """,
+                    (
+                        username,
+                        email,
+                        generate_password_hash(password)
+                    )
                 )
-                db.session.add(new_user)
-                db.session.commit()
+
                 return redirect(url_for('auth.login'))
 
         flash(error)
@@ -50,7 +80,16 @@ def login():
 
         error = None
 
-        user = User.query.filter_by(email=email).first()
+        user_data = query_one(
+            """
+            SELECT *
+            FROM users
+            WHERE email = %s
+            """,
+            (email,)
+        )
+
+        user = User(user_data) if user_data else None
 
         if user is None:
             error = "Incorrect email"
