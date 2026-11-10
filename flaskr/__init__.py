@@ -81,4 +81,8 @@ def create_app(test_config=None):
     from .c_test_routes import bp as test_bp
     app.register_blueprint(test_bp)
 
+    @app.route("/health")
+    def health():
+        return {"status": "ok"}, 200
+
     return app

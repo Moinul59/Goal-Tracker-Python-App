@@ -13,8 +13,10 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
 
@@ -37,9 +39,13 @@ services:
         "worker",
         "--loglevel=info"
       ]
+
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+        
     networks:
       - backend
 
@@ -49,6 +55,13 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
     ports:
       - "5432:5432"
     volumes:
@@ -61,8 +74,16 @@ services:
     image: redis:7-alpine
     container_name: goal-tracker-redis
     restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
     ports:
       - "6379:6379"
+
     networks:
       - backend
 

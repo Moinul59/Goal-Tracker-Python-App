@@ -9,3 +9,33 @@ __pycache__/
 venv/
 *.sqlite3
 migrations/__pycache__/
+
+# ==========================================
+# Terraform Exclusion for Docker
+# ==========================================
+
+# Ignore local binaries and lock files
+.terraform/
+.terraform.lock.hcl
+
+# Ignore all source configuration files
+*.tf
+*.tf.json
+
+# Ignore all variable definitions
+*.tfvars
+*.tfvars.json
+*.tfvars.example
+*.tfvars.sample
+
+# Ignore state files and history
+*.tfstate
+*.tfstate.*
+
+# Ignore plans and logs
+*tfplan*
+*.log
+
+# Ignore local overrides
+*override.tf
+*override.tf.json

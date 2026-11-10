@@ -30,3 +30,39 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+#---------------- Terraform -------------
+# Local data directories (contains downloaded providers and modules)
+.terraform/
+
+# Provider sizes or cache directories (if using custom cache paths)
+.terraform.lock.hcl.tmp
+
+# State files and backups (Contains unencrypted secrets!)
+*.tfstate
+*.tfstate.*
+
+# Crash logs (generated if Terraform panics)
+crash.log
+crash.*.log
+
+# Exclude all variable files as they contain environment secrets
+*.tfvars
+*.tfvars.json
+
+# Allow variable template/example files to be tracked in Git
+!*.tfvars.example
+!*.tfvars.sample
+
+# Saved execution plans (can contain unencrypted sensitive values)
+*tfplan*
+
+# Ignore override files for local tweaks
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc

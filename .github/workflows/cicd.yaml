@@ -36,7 +36,8 @@ jobs:
     #     pip cache info
 
     - name: Run tests
-      run: python -m pytest
+      run: |
+        python -m pytest -v
 
   build-and-push:
     needs: test
@@ -44,6 +45,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Validate Compose file
+      run: docker compose config
 
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -69,25 +73,25 @@ jobs:
       with:
         context: .
         push: ${{ github.event_name != 'pull_request' }}
+        load: ${{ github.event_name == 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
+  # deploy:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
+  #   if: github.event_name != 'pull_request'
 
-    if: github.event_name != 'pull_request'
+  #   steps:
+  #   - name: Deploy to VM via SSH
+  #     uses: appleboy/ssh-action@v1
+  #     with:
+  #       host: ${{ secrets.VM_HOST }}
+  #       username: ${{ secrets.VM_USER }}
+  #       key: ${{ secrets.VM_SSH_KEY }}
+  #       script: |
+  #         set -e
+  #           cd ~/app
 
-    steps:
-    - name: Deploy to VM via SSH
-      uses: appleboy/ssh-action@v1
-      with:
-        host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USER }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        script: |
-          set -e
-            cd ~/app
+  #           docker compose pull web worker
 
-            docker compose pull web worker
-
-            docker compose up -d web worker nginx
+  #           docker compose up -d web worker nginx
